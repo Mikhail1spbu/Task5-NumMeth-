@@ -21,6 +21,7 @@ public class List {
     }
 
     void print(){
+
         //Таблица узлов
         System.out.println("Таюлица узлов для функции f(x) = 1 - exp(-x) + x^2");
         System.out.println("╔" + X[0] + "╦" + Fx[0] + "╗");
@@ -30,74 +31,109 @@ public class List {
         System.out.println("" + X[m-1] + "╩" + Fx[m-1] + "╝");
     }
 
-    void interpolation(Double a, Double b, DoubleUnaryOperator f){
+    Double interpolation(Double a, Double b, Double xx){
         Scanner in = new Scanner(System.in);
-        System.out.print("Хотите найти приближенное значение в точке?" + "\n0 -Нет" + "\n1 - Да\n" );
-        int newX = in.nextInt();
-
-        while (newX == 1){
-            first:{
-                System.out.println("Введите точку на отрезке [" + a + ", " + b + "] , в которой надо вычислить занчение полинома: ");
-                Double xx = in.nextDouble();
-                if (xx < a){
-                    System.out.println("Выход за границы отрезка");
-                    break first;
-                }
-                if (xx > b){
-                    System.out.println("Выход за границы отрезка");
-                    break first;
-                }
-
-                //Степень Р_n
-                Double P = Fx[0];
-                System.out.print("Введите степень полинома наилучшего приближения (не выше " + (m - 1) + "): ");
-                int n = in.nextInt();
-                if (n >  m - 1){
-                    System.out.println("Ошибка в степени полинома");
-                    break first;
-                }
-
-                Double h = (b-a)/(m-1);
-                //System.out.print("\n");
-                if (xx < (a +  h) ) {
-                    Double t = (xx - a)/h;
-
-                    for (int i = 1; i <= n ; i++ ){
-                        P += fin_dif(i, 0, Fx, X)*mult(i, t)/factorial(i);
-                    }
-
-
-                }else if (xx > (b - h ) ){
-                    Double t = (xx - b)/h;
-                    P = Fx[m-1];
-
-                    for (int i = 1; i <= n ; i++ ){
-                        P += fin_dif(i, m-1-i, Fx, X)*mult(i, t)/factorial(i);
-                    }
-                }else {
-                    Double z = X[0];
-                    int i0 = 0;
-                    for (int i = 1; i < m; i++){
-                        if (comparator(X[i],z,xx)){
-                            z = X[i];
-                            P = Fx[i];
-                            i0 = i;
-                        }
-                    }
-                    Double t = (xx - z)/h;
-
-                    for (int i = 1; i <= n ; i++ ){
-                        int k = (int) ((i+1)/2);
-                        P += fin_dif(i,i0 - k,Fx,X) * (multG(i,t))/factorial(i);
-                    }
-                }
-
-                Double R = abs(f.applyAsDouble(xx) - P);
-                System.out.print("Значение полинома наилучшего приближения: " + P + "\nВеличина невязки: " + R);
-            }
-            System.out.print("Хотите найти приближенное значение в точке?" + "\n0 -Нет" + "\n1 - Да" );
-            newX = in.nextInt();
+        if (xx < a){
+            System.out.println("Выход за границы отрезка");
+            return 0.0;
+            //System.out.close();
         }
+        if (xx > b){
+            System.out.println("Выход за границы отрезка");
+            return 0.0;
+        }
+
+        //Степень Р_n
+        Double P = Fx[0];
+        System.out.print("Введите степень полинома наилучшего приближения (не выше " + (m - 1) + "): ");
+        int n = in.nextInt();
+        if (n >  m - 1){
+            System.out.println("Ошибка в степени полинома");
+            return 0.0;
+        }
+
+        Double h = (b-a)/(m-1);
+        //System.out.print("\n");
+        if (xx < (a +  h) ) {
+            Double t = (xx - a)/h;
+
+            for (int i = 1; i <= n ; i++ ){
+                P += fin_dif(i, 0, Fx, X)*mult(i, t)/factorial(i);
+            }
+
+
+        }else if (xx > (b - h ) ){
+            Double t = (xx - b)/h;
+            P = Fx[m-1];
+
+            for (int i = 1; i <= n ; i++ ){
+                P += fin_dif(i, m-1-i, Fx, X)*mult(i, t)/factorial(i);
+            }
+        }else {
+            Double z = X[0];
+            int i0 = 0;
+            for (int i = 1; i < m; i++){
+                if (comparator(X[i],z,xx)){
+                    z = X[i];
+                    P = Fx[i];
+                    i0 = i;
+                }
+            }
+            Double t = (xx - z)/h;
+
+            for (int i = 1; i <= n ; i++ ){
+                int k = (int) ((i+1)/2);
+                P += fin_dif(i,i0 - k,Fx,X) * (multG(i,t))/factorial(i);
+            }
+        }
+        return P;
+    }
+
+    Double inverse_interpolation(Double a, Double b, Double xx){
+        for (int i = 0; i < m; i++){
+            Double s = X[i];
+            X[i] = Fx[i];
+            Fx[i] = s;
+        }
+        a = X[0];
+        b = X[m-1];
+        //Сортировка узлов(пузырьком)
+        for (int i = 0; i < m; i++) {
+            for (int j = m - 1; j > i; j--) {
+                if (comparator(X[j], X[j - 1],xx)) {
+                    Double t = X[j];
+                    Double tF = Fx[j];
+                    X[j] = X[j - 1];
+                    Fx[j] = Fx[j-1];
+                    X[j - 1] = t;
+                    Fx[j - 1] = tF;
+                }
+            }
+        }
+
+        //Таблица узлов
+        System.out.println("Таюлица узлов для функции f(x) = 1 - exp(-x) + x^2");
+        System.out.println("╔" + X[0] + "╦" + Fx[0] + "╗");
+        for (int i = 1; i < m - 1; i++){
+            System.out.println("╠" + X[i] + "║" + Fx[i] + "╣");
+        }
+        System.out.println("" + X[m-1] + "╩" + Fx[m-1] + "╝");
+
+
+        //Построение P_n
+        Scanner in = new Scanner(System.in);
+        Double P = Fx[0];
+        System.out.print("Введите степень полинома наилучшего приближения: ");
+        int n = in.nextInt();
+        if (n >  m - 1){
+            System.out.println("Ошибка в степени полинома");
+            System.exit(0);
+        }
+
+        for (int i = 1; i <= n ; i++ ){
+            P += div_dif(i, 0, i, Fx, X)*mult_inv(i, xx, X);
+        }
+        return P;
     }
 
     static boolean comparator (Double x1, double x2, double a){
@@ -124,6 +160,25 @@ public class List {
         Double m = 1.0;
         for (int i = 0; i < l; i++){
             m = m*(t-i);
+        }
+        return m;
+    }
+
+    static double div_dif (int l, int i, int j, Double [] Fx, Double [] X){  //i и j - номера первого и последнего узлов
+        Double f;
+        if (l == 1){
+            f = (Fx[j] - Fx[i]) / (X[j] - X[i]);
+        }
+        else{
+            f = (div_dif(l-1, i + 1, j, Fx, X) - div_dif(l-1, i, j - 1, Fx, X)) / ( X[j] - X[i]);
+        }
+        return f;
+    }
+
+    static double mult_inv (int l, Double xx, Double[] X){
+        Double m = 1.0;
+        for (int i = 0; i < l; i++){
+            m = m*(xx-X[i]);
         }
         return m;
     }
